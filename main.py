@@ -1,4 +1,9 @@
 """
+date: 2023-09-16
+source: https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API
+description: modified version for upload function + search query
+version: 0.1 PreAplpha xD
+
 To utilize this example please install requests. The rest of the dependencies are part of the Python 3 standard
 library.
 
@@ -298,11 +303,21 @@ def main() -> None:
 
     # Create the client and perform an example call using token request signing
     client = Client(scheme=BHE_SCHEME, host=BHE_DOMAIN, port=BHE_PORT, credentials=credentials)
-    
+
+    # just adopt the code to upload files ;-)
     id = client.upload()
     files = [pos_json for pos_json in os.listdir() if pos_json.endswith('.json')]
     [client.upload_file(id, file) for file in files]
     client.stop_uploads(id)
+
+    # take this example to create your own queries ;-)
+    response = client._request('POST', '/api/v2/graphs/cypher', bytes('{"query": "MATCH (n:User) WHERE n.hasspn=true RETURN n"}', 'ascii'))
+    data = response.json()['data']
+    for node in data['nodes']:
+        oid = data['nodes'][node]['objectId']
+        responseUser = client._request('GET', f'/api/v2/users/{oid}')
+        spns = responseUser.json()['data']['props']['serviceprincipalnames']
+        print(spns)
     
 
 if __name__ == "__main__":
