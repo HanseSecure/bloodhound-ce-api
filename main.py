@@ -1,5 +1,5 @@
 """
-date: 2023-09-16
+date: 2024-02-05
 source: https://support.bloodhoundenterprise.io/hc/en-us/articles/11311053342619-Working-with-the-BloodHound-API
 description: modified version for upload function + search query
 version: 0.1 PreAplpha xD
@@ -21,6 +21,9 @@ import os
 import requests
 import datetime
 import json
+import sys
+import shutil
+import optparse
 
 from typing import Optional
 
@@ -28,8 +31,8 @@ from typing import Optional
 BHE_DOMAIN = "localhost"
 BHE_PORT = 8080
 BHE_SCHEME = "http"
-BHE_TOKEN_ID = "XXXX"
-BHE_TOKEN_KEY = "XXXX"
+BHE_TOKEN_ID = "a2b5c65d-9ae9-4983-baff-055aa661d97b"
+BHE_TOKEN_KEY = "TCvIDPG8qN0Gw7Gky7UNto5hscMmwLu8K9wmdFXC7xhNJHt+G8jNbA=="
 
 PRINT_PRINCIPALS = False
 PRINT_ATTACK_PATH_TIMELINE_DATA = False
@@ -288,6 +291,23 @@ class Client(object):
         payload = response.status_code
         print(payload)
 
+    def findComputersWithoutPassword(self, cla):
+        response = self._request('POST', '/api/v2/graphs/cypher', bytes('{"query": "' + cla + '"}', 'ascii'))
+        data = response.json()['data'] 
+        for node in data['nodes']:
+            oid = data['nodes'][node]['objectId']
+            responseUser = self._request('GET', f'/api/v2/computers/{oid}')
+            name = responseUser.json()['data']['props']['name']
+            print(name)
+    
+    def findUsersWithoutPassword(self, cla):
+        response = self._request('POST', '/api/v2/graphs/cypher', bytes('{"query": "' + cla + '"}', 'ascii'))
+        data = response.json()['data'] 
+        for node in data['nodes']:
+            oid = data['nodes'][node]['objectId']
+            responseUser = self._request('GET', f'/api/v2/users/{oid}')
+            name = responseUser.json()['data']['props']['name']
+            print(name)
         
 
 
@@ -295,6 +315,13 @@ class Client(object):
 
 
 def main() -> None:
+    parser = optparse.OptionParser('-n argument -u user')
+    parser.add_option('-n', dest='computerquery', type='string', help='specify argument')
+    parser.add_option('-u', dest='userquery', type='string', help='specify argument')
+
+    (options, args) = parser.parse_args()
+    ccommand = options.computerquery
+    ucommand = options.userquery
     # This might be best loaded from a file
     credentials = Credentials(
         token_id=BHE_TOKEN_ID,
@@ -310,17 +337,26 @@ def main() -> None:
     [client.upload_file(id, file) for file in files]
     client.stop_uploads(id)
 
+    if ccommand:
+        client.findComputersWithoutPassword(ccommand)
+
+    if ucommand:
+        client.findUsersWithoutPassword(ucommand)
+    #client.findExchangeServers()
+
     # take this example to create your own queries ;-)
-    response = client._request('POST', '/api/v2/graphs/cypher', bytes('{"query": "MATCH (n:User) WHERE n.hasspn=true RETURN n"}', 'ascii'))
-    data = response.json()['data']
-    for node in data['nodes']:
-        oid = data['nodes'][node]['objectId']
-        responseUser = client._request('GET', f'/api/v2/users/{oid}')
-        spns = responseUser.json()['data']['props']['serviceprincipalnames']
-        print(spns)
+    #response = client._request('POST', '/api/v2/graphs/cypher', bytes('{"query": "MATCH (n:User) WHERE n.hasspn=true RETURN n"}', 'ascii'))
+    #data = response.json()['data']
+    #for node in data['nodes']:
+     #   oid = data['nodes'][node]['objectId']
+      #  responseUser = client._request('GET', f'/api/v2/users/{oid}')
+       # spns = responseUser.json()['data']['props']['serviceprincipalnames']
+        #print(spns)
     
+  
+    
+
 
 if __name__ == "__main__":
     main()
-
 
