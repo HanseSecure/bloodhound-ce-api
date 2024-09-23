@@ -12,3 +12,6 @@ Flags:
 
 ### Usage
 `python any_query_post.py -c "MATCH (n:User) WHERE n.hasspn=true RETURN n"`
+
+## Developed by: HanseSecure
+- Twitter: [HanseSecure](https://twitter.com/HanseSecure)
