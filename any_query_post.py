@@ -354,8 +354,8 @@ def main() -> None:
     (options, args) = parser.parse_args()
     query = options.query
 
-    confparser = configparser.ConfigParser()
-    confparser.read_file(open("config.conf"))
+    #confparser = configparser.ConfigParser()
+    #confparser.read_file(open("config.conf"))
 
     # This might be best loaded from a file
     credentials = Credentials(
